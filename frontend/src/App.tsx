@@ -1,11 +1,17 @@
-function App() {
-  return (
-    <>
-      <div className="w-[100vw] h-[100vh] flex justify-center items-center">
-        <h1 className="text-center text-4xl font-bold">Hello World</h1>
-      </div>
-    </>
-  )
-}
+import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { AppRouter } from './router';
+import Layout from './components/layout/Layout';
+import './styles/globals.css';
 
-export default App
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <Layout>
+        <AppRouter />
+      </Layout>
+    </BrowserRouter>
+  );
+};
+
+export default App;
