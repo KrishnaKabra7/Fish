@@ -8,6 +8,7 @@ import './index.css'
 import RootLayout from './pages/RootLayout';
 import Home from './pages/home/Home';
 import Game from './pages/game/Game';
+import Rules from './pages/rules/Rules';
 
 
 const router = createBrowserRouter([
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
       {
         path: "/game",
         Component: Game,
+      },
+      {
+        path: "/rules",
+        Component: Rules,
       }
     ]
   },

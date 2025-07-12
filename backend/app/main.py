@@ -6,7 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
 
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+
+from fastapi import HTTPException
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .fish.server import routes
 from .fish.utils.logs import CustomLogFormatter
@@ -21,6 +23,16 @@ logger.addHandler(ch)
 
 if os.getenv("DEBUG") == "True":
     logger.setLevel(logging.DEBUG)
+
+class SPAStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except (HTTPException, StarletteHTTPException) as ex:
+            if ex.status_code == 404:
+                return await super().get_response("index.html", scope)
+            else:
+                raise ex
 
 app = FastAPI(debug=os.getenv("DEBUG") == "True")
 app.include_router(routes.router)
@@ -38,13 +50,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="static"), name="assets")
-templates = Jinja2Templates(directory="templates")
+app.mount("/", SPAStaticFiles(directory="dist", html=True), name="spa-static-files")
 
 @app.get("/health")
 def health():
     return { "Hello": "World", "timestamp": datetime.now(timezone.utc) }
-
-@app.get("/")
-async def serve_spa(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
