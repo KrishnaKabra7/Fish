@@ -541,15 +541,21 @@ export default function Game() {
       return
     }
 
-    toast.info("New Pass", {
-      description: `${truncateString(api_data.player_id, TRUNCATE_NAME)} has passed!`,
-      duration: 8000,
-    })
+    // toast.info("New Pass", {
+    //   description: `${truncateString(api_data.player_id, TRUNCATE_NAME)} has passed!`,
+    //   duration: 8000,
+    // })
 
     new_passed.push(players![api_data.player_id])
     setClaimOppPassed(new_passed)
 
-    setClaimOppAllPassed(true)
+    if (api_data.all_passed) {
+      setClaimOppAllPassed(true)
+      toast.info("All Passed!", {
+        description: `All players have passed. ${truncateString(currentClaimOpp?.player_id || "", TRUNCATE_NAME)} must claim.`,
+        duration: 8000,
+      })
+    }
   }
   const handleGameFinished = (api_data: ApiMessageGameFinished) => {
     if (api_data.winning_team == players![playerName!].team) {
