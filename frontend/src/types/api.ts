@@ -86,7 +86,7 @@ export const ApiMessageGameFinishedSchema = z.object({
 })
 export type ApiMessageGameFinished = z.infer<typeof ApiMessageGameFinishedSchema>
 
-export const ApiMessageErrorSchema = z.object({
+export const ApiMessageErrorSchema = z.looseObject({
   type: z.enum(ApiEvent).optional(),
   error: z.string()
 })

@@ -9,7 +9,7 @@ import { FishSymbol, Loader2Icon } from "lucide-react"
 import { GAME_ID_LENGTH, MAX_NAME_LENGTH } from "@/utils/constants"
 
 type RegisterProps = {
-  plyr_name_error: boolean,
+  plyr_name_error: string | undefined,
   loading: boolean,
   submit(game_id: string, plyr_name: string): void
 }
@@ -27,7 +27,7 @@ const inputSchema = z.object({
 })
 type UserInput = z.infer<typeof inputSchema>
 
-export default function Register({ plyr_name_error, loading, submit }: RegisterProps) {
+export default function Register({ plyr_name_error: error_server, loading, submit }: RegisterProps) {
   const { register, handleSubmit, formState: { errors }, } = useForm<UserInput>({
     resolver: zodResolver(inputSchema)
   })
@@ -59,7 +59,7 @@ export default function Register({ plyr_name_error, loading, submit }: RegisterP
                 <Input id="playerNameInp" type="text" placeholder="HarryPotter" required {...register('player_name')} />
                 <span className='text-xs text-gray-500'>Alphanumeric string</span>
                 { errors.player_name && <span className="text-sm text-red-500">{ errors.player_name.message }</span> }
-                { plyr_name_error && <span className="text-sm text-red-500">Player with this name already exists</span> }
+                { error_server && <span className="text-sm text-red-500">{ error_server }</span> }
               </div>
             </div>
           </CardContent>

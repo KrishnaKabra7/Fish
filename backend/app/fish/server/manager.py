@@ -108,6 +108,14 @@ class GamesManager:
             return False
 
         with self.lock:
+            if game_id in self.state and self.state[game_id].game.status != GameStatus.LOBBY:
+                if self.state[game_id].game.status == GameStatus.ACTIVE_ASK or self.state[game_id].game.status == GameStatus.ACTIVE_COUNTER:
+                    msg = "Cannot join ongoing game"
+                else:
+                    msg = "Cannot join finished game"
+                await ws.send_json({ "type": ApiEvent.ERROR, "data": { "type": ApiEvent.NEW_CONNECTION, "error": msg } })
+                return False
+
             if game_id in self.state and self.state[game_id].game.has_player(plyr_name):
                 await ws.send_json({ "type": ApiEvent.ERROR, "data": { "type": ApiEvent.NEW_CONNECTION, "error": "Player with that name already exists" } })
                 return False
@@ -138,6 +146,14 @@ class GamesManager:
     async def disconnect(self, game_id: str, plyr_id: str):
         with self.lock:
             if game_id in self.state:
+                terminate = False
+                if self.state[game_id].game.status == GameStatus.ACTIVE_ASK or self.state[game_id].game.status:
+                    terminate = True
+                    await self._broadcast_message(game_id, {
+                        "type": ApiEvent.ERROR,
+                        "data": { "type": ApiEvent.PLAYER_LEFT, "error": f"A Player disconnected during game. Game is now terminated.", "plyr_id": plyr_id },
+                    })
+
                 if self.state[game_id].game.has_player(plyr_id):
                     self.state[game_id].game.leave_player(plyr_id)
 
@@ -146,10 +162,13 @@ class GamesManager:
                     logger.info("Everyone Disconnected")
                     return
 
+                if terminate:
+                    return
+
                 obj: Dict[str, str | None] = { "id": plyr_id }
                 if plyr_id == self.state[game_id].host:
                     self.state[game_id].host = next(iter(self.state[game_id].game.players))
-                    obj["new_host"] = self.state[game_id].host
+                obj["new_host"] = self.state[game_id].host
 
                 if plyr_id in self.state[game_id].websockets:
                     del self.state[game_id].websockets[plyr_id]

@@ -38,7 +38,7 @@ export default function Game() {
   const [playerName, setPlayerName] = useState<string | undefined>()
 
   const [registerLoading, setRegisterLoading] = useState(false)
-  const [registerPlayerNameError, setRegisterPlayerNameError] = useState(false)
+  const [registerError, setRegisterError] = useState<string | undefined>(undefined)
 
   const [lobbyWaiting, setLobbyWaiting] = useState(false)
   const [lobbyError, setLobbyError] = useState<string | undefined>()
@@ -388,7 +388,7 @@ export default function Game() {
 
   const handleNewConnection = (api_data: ApiMessageNewConnection) => {
     setRegisterLoading(false)
-    setRegisterPlayerNameError(false)
+    setRegisterError(undefined)
 
     var new_players = Object.fromEntries(api_data.players!.map(p => [p.id, p]))
     new_players[playerName!].me = true
@@ -510,7 +510,6 @@ export default function Game() {
     }
     setPlayers(new_players)
 
-    console.log("AAAA", api_data)
     if (api_data.point_to == TeamID.TEAM_1) setTeam1Score(team1Score + 1)
     else setTeam2Score(team2Score + 1)
   }
@@ -590,7 +589,7 @@ export default function Game() {
     }
     switch (api_data.type) {
       case ApiEvent.NEW_CONNECTION: {
-        setRegisterPlayerNameError(true);
+        setRegisterError(api_data.error);
         setRegisterLoading(false);
         break;
       }
@@ -599,6 +598,15 @@ export default function Game() {
         setLobbyError(api_data.error);
         setLobbyWaiting(false);
         break;
+      }
+
+      case ApiEvent.PLAYER_LEFT: {
+        const plyr_id: string = api_data.plyr_id as string || "Unknown"
+        toast.error("Game Terminated :(", {
+          description: `${truncateString(plyr_id, TRUNCATE_NAME)} has disconnected during the game. The game is now terminated.`,
+          duration: 60000
+        })
+        setState(State.FINISHED)
       }
     }
   }
@@ -796,7 +804,7 @@ export default function Game() {
   return (
     <div className="w-[100vw] h-[100vh]">
       { state != State.REGISTER ? <></> :
-        <Register loading={registerLoading} plyr_name_error={registerPlayerNameError} submit={register} />
+        <Register loading={registerLoading} plyr_name_error={registerError} submit={register} />
       }
       { state != State.LOBBY ? <></> :
         <Lobby game_id={gameID || ""} players={players || {}} isHost={players![playerName!].host || false} loading={lobbyWaiting} onStart={start} error={lobbyError} />
