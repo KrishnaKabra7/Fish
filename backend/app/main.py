@@ -21,8 +21,11 @@ ch.setFormatter(CustomLogFormatter())
 logger = logging.getLogger()
 logger.addHandler(ch)
 
-if os.getenv("DEBUG") == "True":
-    logger.setLevel(logging.DEBUG)
+# if os.getenv("DEBUG") == "True":
+#     logger.setLevel(logging.DEBUG)
+
+
+logger.setLevel(logging.INFO)
 
 class SPAStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
