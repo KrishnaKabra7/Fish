@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { toast } from 'sonner'
+import { useInterval } from '@/utils/hooks'
 
 const State = {
   REGISTER: "REGISTER",
@@ -610,6 +611,17 @@ export default function Game() {
       }
     }
   }
+
+  const health_url = import.meta.env.VITE_API_URL + "/health" || "/health";
+  useInterval(async () => {
+    const res = await fetch(health_url)
+    if (res.status != 200) {
+      console.error("Server not healthy!!!")
+      return
+    }
+    const data = await res.json()
+    console.log(`Server healthy`, data)
+  }, 5 * 60 * 1000)
 
   const socket_url = import.meta.env.VITE_WS_URL || "/ws"
   const socket = useWebSocket(socket_url, {
